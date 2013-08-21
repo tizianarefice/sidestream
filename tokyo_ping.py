@@ -6,8 +6,9 @@ tokyo-ping.py: Poll for newly closed connections and probe the remote address wi
 
 print "Starting tokyo-ping"
 
-from Web100 import *
-import paris_traceroute
+from utils import IPAddressUtils
+from utils import LogFileUtils
+from utils import GeneralServingLoop
 import subprocess
 import sys
 import time
@@ -17,31 +18,15 @@ class TokyoPing():
     inter_probe_gap_ms = 200
     n_flow_ids = 32
     separator = '=== %s id=%d ==='
+    label = 'tokyo-ping'
 
 
-olddir=""
-logc = 0
-def getlogf(t):
-    global logf, server, logc
-    logdir = time.strftime("%Y/%m/%d/", time.gmtime(t))
-    if olddir and olddir!=logdir:
-        paris_traceroute.postproc(olddir)
-    paris_traceroute.mkdirs(logdir+paris_traceroute.server)
-    logname = time.strftime("%Y/%m/%d/%%s%Y%m%dT%TZ_ALL%%d.tokyo",
-                            time.gmtime(t)) % (server, logc)
-    logc+=1
-    return open(logname, "a")
-
-def do_ping(rem_address):
-    # Ignore connections to loopback and Planet Lab Control (PLC)
-    if rem_address == "127.0.0.1":
+def do_ping(rem_address, node):
+    if not IPAddressUtils.is_remote_address(rem_address):
         return
-    if rem_address.startswith("128.112.139"):
-        return
-
     # pick/open a logfile as needed, based on the close poll time
     t = time.time()
-    logf = getlogf(t)
+    logf = LogFileUtils.getlogf(t, TokyoPing.label, node)
 
     logf.write(TokyoPing.separator % ('ping', 0))
     process = subprocess.Popen(["ping",
@@ -66,10 +51,9 @@ def do_ping(rem_address):
     logf.close()
 
 
-server=""
 def main():
     # Main
-    global server
+    server=""
     if len(sys.argv) == 1:
         server = ""
     elif len(sys.argv) == 2:
@@ -77,30 +61,8 @@ def main():
     else:
         print "Usage: %s [server_name]" % sys.argv[0]
         sys.exit()
-
-    recent_ips = paris_traceroute.RecentList()
-
-    while True:
-        a = Web100Agent()
-        closed=[]
-        cl = a.all_connections()
-        newclosed=[]
-        for c in cl:
-            try:
-                if c.read('State') == 1:
-                    newclosed.append(c.cid)
-                    if not c.cid in closed:
-                        rem_ip = c.read("RemAddress")
-                        if (paris_traceroute.is_valid_ipv4_address(rem_ip) and
-                           not recent_ips.contain(rem_ip)):
-                            print "Running trace to: %s" % rem_ip
-                            do_ping(rem_ip)
-                            recent_ips.add(rem_ip)
-            except Exception, e:
-                print "Exception:", e
-                pass
-        closed = newclosed
-        time.sleep(5)
+    s = GeneralServingLoop(TokyoPing.label)
+    s.serve(do_ping, server)
 
 
 if __name__ == "__main__":
