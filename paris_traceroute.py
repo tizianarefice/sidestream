@@ -43,7 +43,7 @@ def main():
         print "Usage: %s [server_name]" % sys.argv[0]
         sys.exit()
     s = GeneralServingLoop(ParisTraceroute.label)
-    s.serve(do_traceroute, server)
+    s.serve(function=do_traceroute, node=server)
 
 
 if __name__ == "__main__":

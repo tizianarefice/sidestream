@@ -119,7 +119,7 @@ class GeneralServingLoop:
     def __init__(self, label):
         self.label = label
 
-    def serve(self, do_serve, server):
+    def serve(self, function, node):
         recent_ips = RecentList()
         while True:
             a = Web100Agent()
@@ -135,7 +135,7 @@ class GeneralServingLoop:
                             if (IPAddressUtils.is_valid_ipv4_address(rem_ip) and 
                                     not recent_ips.contain(rem_ip)):
                                 print "Running %s to: %s" % (self.label, rem_ip)
-                                do_serve(rem_ip, server)
+                                function(rem_ip, node)
                                 recent_ips.add(rem_ip)
                             #else:
                             #    print "Skipping: %s" % rem_ip
