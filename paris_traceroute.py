@@ -7,9 +7,9 @@ the remote address to a log file.
 
 print "Starting paris-traceroute"
 
+from utils import GeneralServingLoop
 from utils import IPAddressUtils
 from utils import LogFileUtils
-from utils import GeneralServingLoop
 import subprocess
 import sys
 import time

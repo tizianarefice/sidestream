@@ -29,7 +29,7 @@ class LogFileUtils:
             else: raise
 
     @classmethod
-    def postproc(cls, dir):
+    def postProcessDataDir(cls, dir):
         """ Remove all write permissions, compute md5sums, etc """
         for f in glob.glob(dir+"*"):
             os.chmod(f, 0444)
@@ -45,7 +45,7 @@ class LogFileUtils:
         cls.next_id.setdefault(label, 0)
         logdir = time.strftime("%Y/%m/%d/", time.gmtime(t))
         if cls.last_dir[label] and cls.last_dir[label] != logdir:
-            cls.postproc(cls.last_dir[label])
+            cls.postProcessDataDir(cls.last_dir[label])
         cls.mkdirs(logdir + server)
         logname = time.strftime(
                 "%Y/%m/%d/%%s%Y%m%dT%TZ_ALL%%d.%%s",
@@ -58,9 +58,7 @@ class IPAddressUtils:
     @classmethod
     def is_remote_address(cls, address):
         # Ignore connections to loopback and Planet Lab Control (PLC)
-        if address == "127.0.0.1":
-            return False
-        if address.startswith("128.112.139"):
+        if address == "127.0.0.1" or address.startswith("128.112.139"):
             return False
         return True
 
@@ -92,17 +90,20 @@ class IPAddressUtils:
 
 class RecentList:
     def __init__(self):
+        # a list of (IP, timestamp) pairs. This list is periodically
+        # cleaned up to remove the IPs whose associated timestamp
+        # is too old.
         self.iplist = []
-        # how long an IP address is considered "recent" for
+        # the threshold, in seconds, after which an IP address is removed
         self.CACHE_WINDOW = 60 * 10  
 
-    def ip_is_recent(self, arg):
-        (ip,ts) = arg
+    def is_recent(self, arg):
+        (_, ts) = arg
         current_ts = time.time()
         return (current_ts <= ts + self.CACHE_WINDOW)
 
     def clean(self):
-        self.iplist = filter(self.ip_is_recent, self.iplist)
+        self.iplist = [pair for pair in self.iplist if self.is_recent(pair)]
 
     def add(self, remote_ip):
         self.clean()
@@ -110,7 +111,7 @@ class RecentList:
 
     def contain(self, remote_ip):
         self.clean()
-        for ip, ts in self.iplist:
+        for ip, _ in self.iplist:
             if remote_ip == ip: return True
         return False
 
