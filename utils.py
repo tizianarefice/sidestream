@@ -29,7 +29,7 @@ class LogFileUtils:
             else: raise
 
     @classmethod
-    def postProcessDataDir(cls, dir):
+    def postprocess_datadir(cls, dir):
         """ Remove all write permissions, compute md5sums, etc """
         for f in glob.glob(dir+"*"):
             os.chmod(f, 0444)
@@ -45,7 +45,7 @@ class LogFileUtils:
         cls.next_id.setdefault(label, 0)
         logdir = time.strftime("%Y/%m/%d/", time.gmtime(t))
         if cls.last_dir[label] and cls.last_dir[label] != logdir:
-            cls.postProcessDataDir(cls.last_dir[label])
+            cls.postprocess_datadir(cls.last_dir[label])
         cls.mkdirs(logdir + server)
         logname = time.strftime(
                 "%Y/%m/%d/%%s%Y%m%dT%TZ_ALL%%d.%%s",
@@ -58,9 +58,7 @@ class IPAddressUtils:
     @classmethod
     def is_remote_address(cls, address):
         # Ignore connections to loopback and Planet Lab Control (PLC)
-        if address == "127.0.0.1" or address.startswith("128.112.139"):
-            return False
-        return True
+        return address != "127.0.0.1" and not address.startswith("128.112.139")
 
     @classmethod
     def is_valid_ipv4_address(cls, address):
