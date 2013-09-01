@@ -1,7 +1,7 @@
 #! /usr/bin/python -u
 
 """
-tokyo_ping.py: Poll for newly closed connections and probe the remote address with different paris-traceroute flow-ids as well as ping. Output is sent to a log file.
+tokyo-ping.py: Poll for newly closed connections and probe the remote address with different paris-traceroute flow-ids as well as ping. Output is sent to a log file.
 
 
 Expected output should look like:

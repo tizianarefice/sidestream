@@ -1,7 +1,7 @@
 #! /usr/bin/python -u
 
 """
-paris_traceroute.py: Poll for newly closed connections and print a traceroute to
+paris-traceroute.py: Poll for newly closed connections and print a traceroute to
 the remote address to a log file.
 """
 
